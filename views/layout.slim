@@ -8,8 +8,8 @@ html
     meta name='author' content='Brandur Leach'
 
     javascript:
-      window.http_api_key = "#{ENV["HTTP_API_KEY"]}";
-      window.http_api_url = "#{ENV["HTTP_API_URL"]}";
+      window.http_api_key = "#{{ENV["HTTP_API_KEY"]}}";
+      window.http_api_url = "#{{ENV["HTTP_API_URL"]}}";
 
     link href="/assets/application.css" media="screen" rel="stylesheet" type="text/css"
     script src="/assets/application.js" type="text/javascript"

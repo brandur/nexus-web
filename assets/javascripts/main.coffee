@@ -18,10 +18,7 @@ $ ->
 
     model: Event
 
-    #url: "#{window.http_api_url}/events"
-    #url: "https://nexus-brandur.herokuapp.com/events"
-    #url: "/events"
-    url: "http://localhost:5100/events"
+    url: "#{window.http_api_url}/events"
 
     comparator: (event) ->
       event.get('published_at')
@@ -92,7 +89,7 @@ $ ->
 
   $.ajaxSetup
     headers:
-      Authorization: "Basic #{toBase64(":supersecretpassword")}"
+      Authorization: "Basic #{toBase64(":#{window.http_api_key}")}"
 
   collection = new EventCollection
   view = new MainView(collection)
