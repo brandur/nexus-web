@@ -1,18 +1,40 @@
 $ ->
 
+  #
+  # Event
+  #
+
   class Event extends Backbone.Model
 
     defaults:
       title: 'Hello'
       content: 'Backbone'
 
-  class List extends Backbone.Collection
+  #
+  # EventCollection
+  #
+
+  class EventCollection extends Backbone.Collection
 
     model: Event
+
+    #url: "#{window.http_api_url}/events"
+    #url: "https://nexus-brandur.herokuapp.com/events"
+    #url: "/events"
+    url: "http://localhost:5100/events"
+
+    comparator: (event) ->
+      event.get('published_at')
+
+  #
+  # EventView
+  #
 
   class EventView extends Backbone.View
 
     tagName: 'li'
+
+    template: _.template($('#event-template').html())
 
     initialize: ->
       _.bindAll @
@@ -21,45 +43,34 @@ $ ->
       @model.bind 'remove', @unrender
 
     render: =>
-      $(@el).html """
-        <span>#{@model.get 'title'} #{@model.get 'content'}!</span>
-        <span class="swap">swap</span>
-        <span class="delete">delete</span>
-      """
+      @$el.html(@template(@model.toJSON()))
       @
 
     unrender: =>
       $(@el).remove()
 
-    swap: ->
-      @model.set
-        title: @model.get 'content'
-        content: @model.get 'title'
-
-
     remove: -> @model.destroy()
 
-    events:
-      'click .swap': 'swap'
-      'click .delete': 'remove'
+  #
+  # MainView
+  #
 
-
-  class ListView extends Backbone.View
+  class MainView extends Backbone.View
 
     el: $ 'body'
 
-    initialize: ->
+    initialize: (collection) ->
       _.bindAll @
 
-      @collection = new List
+      @collection = collection
       @collection.bind 'add', @appendEvent
+      @collection.bind 'reset', @render
 
-      @counter = 0
       @render()
 
     render: ->
-      $(@el).append '<button>Add Event List</button>'
       $(@el).append '<ul></ul>'
+      @appendEvent event for event in @collection.models
 
     addEvent: ->
       @counter++
@@ -71,9 +82,18 @@ $ ->
       event_view = new EventView model: event
       $('ul').append event_view.render().el
 
-    events: 'click button': 'addEvent'
+  #
+  # Main
+  #
 
-  Backbone.sync = (method, model, success, error) ->
-    success()
+  toBase64 = (str) ->
+    words = CryptoJS.enc.Latin1.parse(str)
+    CryptoJS.enc.Base64.stringify(words)
 
-  list_view = new ListView
+  $.ajaxSetup
+    headers:
+      Authorization: "Basic #{toBase64(":supersecretpassword")}"
+
+  collection = new EventCollection
+  view = new MainView(collection)
+  collection.fetch()
