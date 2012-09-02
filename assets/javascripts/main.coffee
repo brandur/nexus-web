@@ -7,8 +7,8 @@ $ ->
   class Event extends Backbone.Model
 
     defaults:
-      title: 'Hello'
-      content: 'Backbone'
+      title: null
+      content: null
 
   #
   # EventCollection
@@ -21,7 +21,7 @@ $ ->
     url: "#{window.http_api_url}/events"
 
     comparator: (event) ->
-      event.get('published_at')
+      -event.get('id')
 
   #
   # EventView
@@ -60,24 +60,21 @@ $ ->
       _.bindAll @
 
       @collection = collection
-      @collection.bind 'add', @appendEvent
+      @collection.bind 'add', @prependEvent
       @collection.bind 'reset', @render
 
       @render()
 
     render: ->
-      $(@el).append '<ul></ul>'
-      @appendEvent event for event in @collection.models
+      $(@el).html '<ul id="events"></ul>'
+      $('ul#events').append(@renderEvent(event)) for event in @collection.models
 
-    addEvent: ->
-      @counter++
-      event = new Event
-      event.set content: "#{event.get 'content'} #{@counter}"
-      @collection.add event
-
-    appendEvent: (event) ->
+    renderEvent: (event) ->
       event_view = new EventView model: event
-      $('ul').append event_view.render().el
+      event_view.render().el
+
+    prependEvent: (event) ->
+      $('ul').prepend(@renderEvent(event))
 
   #
   # Main
@@ -92,5 +89,20 @@ $ ->
       Authorization: "Basic #{toBase64(":#{window.http_api_key}")}"
 
   collection = new EventCollection
-  view = new MainView(collection)
   collection.fetch()
+  view = new MainView(collection)
+
+  # poll for new events (but use ids to request only new ones)
+  setInterval ->
+    last_id = if collection.models.length > 0
+      collection.models[0].get("id")
+    else
+      0
+    $.ajax
+      data:
+        since: last_id + 1
+      dataType: 'json'
+      url: "#{window.http_api_url}/events"
+      success: (data) ->
+        collection.add(event) for event in data
+  , 10000

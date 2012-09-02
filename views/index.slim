@@ -1,3 +1,13 @@
 script type="text/template" id="event-template"
-  span <%= title %>
-  span <%= content %>
+  div class="event-container <%= source %>"
+    .internals
+      p.head
+        span.url
+          a href="<%= url %>" Link
+        span.source [<%= source %>]
+        span.title <%= title ? title : "" %>
+      p.content <%= content ? content : "" %>
+      p.tail
+        span.metadata <%= metadata %>
+        span.published_at <%= published_at %>
+        span.id | <%= id %>
